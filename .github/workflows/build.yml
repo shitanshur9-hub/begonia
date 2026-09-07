@@ -1,4 +1,4 @@
-name: Fast Kernel Build via Docker
+name: Fast Kernel Build
 
 on:
   workflow_dispatch:
@@ -6,15 +6,17 @@ on:
 jobs:
   build-kernel:
     runs-on: ubuntu-latest
-    # प्री-बिल्ट डॉकर इमेज जिसमें सभी कर्नल कंपाइलेशन टूल्स मौजूद हैं
-    container:
-      image: akhilnarang/build_environment:latest
 
     steps:
       - name: Checkout Kernel Source
         uses: actions/checkout@v4
         with:
           fetch-depth: 1
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential bc libssl-dev bison flex libncurses5-dev libsqlite3-dev ccache
 
       - name: Build Kernel
         run: |
@@ -27,3 +29,4 @@ jobs:
         with:
           name: Kernel-Image
           path: out/arch/arm64/boot/Image.gz
+          
