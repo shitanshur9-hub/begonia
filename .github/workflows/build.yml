@@ -21,7 +21,7 @@ jobs:
       - name: Build Kernel
         run: |
           mkdir -p out
-          make -j$(nproc --all) O=out ARCH=arm64 spes_defconfig
+          make -j$(nproc --all) O=out ARCH=arm64 begonia_defconfig
           make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu-
 
       - name: Upload Kernel Artifact
@@ -29,4 +29,3 @@ jobs:
         with:
           name: Kernel-Image
           path: out/arch/arm64/boot/Image.gz
-          
