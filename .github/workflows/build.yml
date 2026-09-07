@@ -1,0 +1,29 @@
+name: Fast Kernel Build via Docker
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-kernel:
+    runs-on: ubuntu-latest
+    # प्री-बिल्ट डॉकर इमेज जिसमें सभी कर्नल कंपाइलेशन टूल्स मौजूद हैं
+    container:
+      image: akhilnarang/build_environment:latest
+
+    steps:
+      - name: Checkout Kernel Source
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+
+      - name: Build Kernel
+        run: |
+          mkdir -p out
+          make -j$(nproc --all) O=out ARCH=arm64 spes_defconfig
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu-
+
+      - name: Upload Kernel Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Kernel-Image
+          path: out/arch/arm64/boot/Image.gz
