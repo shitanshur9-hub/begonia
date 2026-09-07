@@ -1,4 +1,4 @@
-name: Fast Kernel Build
+name: Automatic Kernel Build
 
 on:
   workflow_dispatch:
@@ -16,16 +16,26 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential bc libssl-dev bison flex libncurses5-dev libsqlite3-dev ccache
+          sudo apt-get install -y build-essential bc libssl-dev bison flex libncurses5-dev libsqlite3-dev ccache clang lld gcc-aarch64-linux-gnu gcc-arm-linux-gnueabi
 
-      - name: Build Kernel
+      - name: Auto Find Defconfig & Build Kernel
         run: |
           mkdir -p out
-          make -j$(nproc --all) O=out ARCH=arm64 begonia_defconfig
-          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu-
+          # arch/arm64/configs me begonia defconfig ko auto-detect karna
+          DEFCONFIG=$(find arch/arm64/configs -type f -name "*defconfig" | grep -i "begonia" | head -n 1 | sed 's|arch/arm64/configs/||')
+          if [ -z "$DEFCONFIG" ]; then
+            DEFCONFIG=$(find arch/arm64/configs -type f -name "*defconfig" | head -n 1 | sed 's|arch/arm64/configs/||')
+          fi
+          echo "=========================================="
+          echo "Auto Detected Defconfig: $DEFCONFIG"
+          echo "=========================================="
+          
+          make -j$(nproc --all) O=out ARCH=arm64 "$DEFCONFIG"
+          make -j$(nproc --all) O=out ARCH=arm64 CC=clang CROSS_COMPILE=aarch64-linux-gnu- CROSS_COMPILE_ARM32=arm-linux-gnueabi-
 
       - name: Upload Kernel Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Kernel-Image
-          path: out/arch/arm64/boot/Image.gz
+          name: Kernel-Output
+          path: out/arch/arm64/boot/
+          
